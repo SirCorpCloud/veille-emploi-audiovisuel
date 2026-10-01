@@ -66,7 +66,7 @@ def scrape_ecran_total():
     return offers
 
 def collect_offers():
-    offers = []
+    sections = {}
     for name, url in SOURCES.items():
         try:
             feed = feedparser.parse(url)
@@ -74,13 +74,16 @@ def collect_offers():
                 title = getattr(entry, 'title', 'Sans titre')
                 link = getattr(entry, 'link', '')
                 published = getattr(entry, 'published', '')
-                offers.append(f"[{name}] {title}\n{link}\n{published}\n")
+                sections.setdefault(name, []).append(f"{title}\n{link}\n{published}")
         except Exception as e:
-            offers.append(f"[{name}] Erreur: {e}\n")
-    offers.extend(scrape_crews())
-    offers.extend(scrape_artmedia())
-    offers.extend(scrape_ecran_total())
-    return "\n".join(offers)
+            sections.setdefault(name, []).append(f"Erreur: {e}")
+    for name, offers in [("Crews", scrape_crews()), ("Artmedia", scrape_artmedia()), ("Audiovisuel-Emploi", scrape_ecran_total())]:
+        sections.setdefault(name, []).extend(offers)
+    body = ""
+    for name, offers in sections.items():
+        body += f"\n{'='*40}\n{name}\n{'='*40}\n\n"
+        body += "\n\n".join(offers) + "\n\n"
+    return body
 
 def send_daily_digest():
     body = collect_offers()
