@@ -35,7 +35,7 @@ def send_daily_digest():
 
     msg.attach(MIMEText(body, 'plain'))
 
-    with smtplib.SMTP("smtp.gmail.com", 587) as server:
+    with smtplib.SMTP("smtp.mail.icloud.com", 587) as server:
         server.starttls()
         server.login(os.environ.get('EMAIL_FROM'), os.environ.get('EMAIL_PASSWORD'))
         server.send_message(msg)
