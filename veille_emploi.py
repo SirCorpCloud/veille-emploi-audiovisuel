@@ -10,6 +10,9 @@ SOURCES = {
     "Indeed": "https://fr.indeed.com/rss?q=audiovisuel+OR+post-production+OR+m%C3%A9dias&l=Paris&radius=25",
     "MediaKron": "https://www.mediakron.fr/feed/",
     "FranceTravail": "https://www.francetravail.fr/recherche/audiovisuel?lieux=Paris",
+    "LinkedIn": "https://rsshub.app/linkedin/jobs/F/4/audiovisuel%20OR%20post-production%20OR%20m%C3%A9dias/1-2-3/91000003",
+    "EcranTotal": "https://ecran-total.fr/audiovisuel-job/feed/",
+    "Jobintree": "https://www.jobintree.com/emploi/domaine_audiovisuel.html",
 }
 
 def collect_offers():
