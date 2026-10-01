@@ -1,5 +1,7 @@
 import feedparser
 import smtplib
+import requests
+from bs4 import BeautifulSoup
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from datetime import datetime
@@ -15,6 +17,54 @@ SOURCES = {
     "Jobintree": "https://www.jobintree.com/emploi/domaine_audiovisuel.html",
 }
 
+SCRAPING_SOURCES = {
+    "Crews": "https://www.crews-education.com/nos-offres",
+    "Artmedia": "https://www.artmedia.co.il/careers",
+    "Audiovisuel-Emploi": "https://ecran-total.fr/audiovisuel-job/",
+}
+
+def scrape_crews():
+    offers = []
+    try:
+        r = requests.get(SCRAPING_SOURCES["Crews"], timeout=10)
+        soup = BeautifulSoup(r.text, 'html.parser')
+        for job in soup.select('.job-card, .offre-emploi, article')[:10]:
+            title = job.select_one('h2, h3, .title')
+            link = job.find('a')
+            if title and link:
+                offers.append(f"[Crews] {title.text.strip()}\n{link.get('href', '')}\n")
+    except Exception as e:
+        offers.append(f"[Crews] Erreur: {e}\n")
+    return offers
+
+def scrape_artmedia():
+    offers = []
+    try:
+        r = requests.get(SCRAPING_SOURCES["Artmedia"], timeout=10)
+        soup = BeautifulSoup(r.text, 'html.parser')
+        for job in soup.select('.job-listing, .career-item, .offre')[:10]:
+            title = job.select_one('h2, h3, .job-title')
+            link = job.find('a')
+            if title and link:
+                offers.append(f"[Artmedia] {title.text.strip()}\n{link.get('href', '')}\n")
+    except Exception as e:
+        offers.append(f"[Artmedia] Erreur: {e}\n")
+    return offers
+
+def scrape_ecran_total():
+    offers = []
+    try:
+        r = requests.get(SCRAPING_SOURCES["Audiovisuel-Emploi"], timeout=10)
+        soup = BeautifulSoup(r.text, 'html.parser')
+        for job in soup.select('.offre, .job-item, article')[:10]:
+            title = job.select_one('h2, h3, .title')
+            link = job.find('a')
+            if title and link:
+                offers.append(f"[Audiovisuel-Emploi] {title.text.strip()}\n{link.get('href', '')}\n")
+    except Exception as e:
+        offers.append(f"[Audiovisuel-Emploi] Erreur: {e}\n")
+    return offers
+
 def collect_offers():
     offers = []
     for name, url in SOURCES.items():
@@ -27,6 +77,9 @@ def collect_offers():
                 offers.append(f"[{name}] {title}\n{link}\n{published}\n")
         except Exception as e:
             offers.append(f"[{name}] Erreur: {e}\n")
+    offers.extend(scrape_crews())
+    offers.extend(scrape_artmedia())
+    offers.extend(scrape_ecran_total())
     return "\n".join(offers)
 
 def send_daily_digest():
