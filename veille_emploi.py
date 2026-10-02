@@ -77,10 +77,10 @@ def get_driver():
 def login_linkedin(driver):
     try:
         driver.get("https://www.linkedin.com/login")
-        time.sleep(3)
-        driver.find_element(By.ID, "username").send_keys(os.environ.get('LINKEDIN_EMAIL'))
-        driver.find_element(By.ID, "password").send_keys(os.environ.get('LINKEDIN_PASSWORD'))
-        driver.find_element(By.CSS_SELECTOR, "button[type='submit']").click()
+        time.sleep(5)
+        driver.find_element(By.CSS_SELECTOR, "input[type='email'], input[autocomplete='username']").send_keys(os.environ.get('LINKEDIN_EMAIL'))
+        driver.find_element(By.CSS_SELECTOR, "input[type='password'], input[autocomplete='current-password']").send_keys(os.environ.get('LINKEDIN_PASSWORD'))
+        driver.find_element(By.CSS_SELECTOR, "button[type='submit'], button.sign-in-form__submit-btn").click()
         time.sleep(5)
     except Exception as e:
         print(f"LinkedIn login error: {e}")
@@ -88,10 +88,10 @@ def login_linkedin(driver):
 def login_hellowork(driver):
     try:
         driver.get("https://www.hellowork.com/fr-fr/connexion")
-        time.sleep(3)
-        driver.find_element(By.CSS_SELECTOR, "input[type='email'], input[name='email']").send_keys(os.environ.get('HELLOWORK_EMAIL'))
-        driver.find_element(By.CSS_SELECTOR, "input[type='password'], input[name='password']").send_keys(os.environ.get('HELLOWORK_PASSWORD'))
-        driver.find_element(By.CSS_SELECTOR, "button[type='submit']").click()
+        time.sleep(8)
+        driver.find_element(By.CSS_SELECTOR, "input[type='email'], input[name='email'], input[autocomplete='email']").send_keys(os.environ.get('HELLOWORK_EMAIL'))
+        driver.find_element(By.CSS_SELECTOR, "input[type='password'], input[name='password'], input[autocomplete='current-password']").send_keys(os.environ.get('HELLOWORK_PASSWORD'))
+        driver.find_element(By.CSS_SELECTOR, "button[type='submit'], button.login-btn, button[data-testid='login-submit']").click()
         time.sleep(5)
     except Exception as e:
         print(f"HelloWork login error: {e}")
