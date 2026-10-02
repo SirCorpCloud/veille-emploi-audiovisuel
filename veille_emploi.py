@@ -70,14 +70,17 @@ def collect_offers():
     for name, url in SOURCES.items():
         try:
             feed = feedparser.parse(url)
+            print(f"[{name}] {len(feed.entries)} offres trouvées")
             for entry in feed.entries[:15]:
                 title = getattr(entry, 'title', 'Sans titre')
                 link = getattr(entry, 'link', '')
                 published = getattr(entry, 'published', '')
                 sections.setdefault(name, []).append(f"{title}\n{link}\n{published}")
         except Exception as e:
+            print(f"[{name}] Erreur: {e}")
             sections.setdefault(name, []).append(f"Erreur: {e}")
     for name, offers in [("Crews", scrape_crews()), ("Artmedia", scrape_artmedia()), ("Audiovisuel-Emploi", scrape_ecran_total())]:
+        print(f"[{name}] {len(offers)} offres scrapées")
         sections.setdefault(name, []).extend(offers)
     body = ""
     for name, offers in sections.items():
