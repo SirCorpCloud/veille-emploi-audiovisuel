@@ -74,9 +74,32 @@ def get_driver():
     opts.add_argument('user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36')
     return webdriver.Chrome(options=opts)
 
+def login_linkedin(driver):
+    try:
+        driver.get("https://www.linkedin.com/login")
+        time.sleep(3)
+        driver.find_element(By.ID, "username").send_keys(os.environ.get('LINKEDIN_EMAIL'))
+        driver.find_element(By.ID, "password").send_keys(os.environ.get('LINKEDIN_PASSWORD'))
+        driver.find_element(By.CSS_SELECTOR, "button[type='submit']").click()
+        time.sleep(5)
+    except Exception as e:
+        print(f"LinkedIn login error: {e}")
+
+def login_hellowork(driver):
+    try:
+        driver.get("https://www.hellowork.com/fr-fr/connexion")
+        time.sleep(3)
+        driver.find_element(By.CSS_SELECTOR, "input[type='email'], input[name='email']").send_keys(os.environ.get('HELLOWORK_EMAIL'))
+        driver.find_element(By.CSS_SELECTOR, "input[type='password'], input[name='password']").send_keys(os.environ.get('HELLOWORK_PASSWORD'))
+        driver.find_element(By.CSS_SELECTOR, "button[type='submit']").click()
+        time.sleep(5)
+    except Exception as e:
+        print(f"HelloWork login error: {e}")
+
 def scrape_linkedin(driver):
     offers = []
     try:
+        login_linkedin(driver)
         driver.get("https://www.linkedin.com/jobs/search/?keywords=audiovisuel%20post-production&location=Paris")
         time.sleep(8)
         driver.execute_script("window.scrollTo(0, document.body.scrollHeight)")
@@ -97,6 +120,7 @@ def scrape_linkedin(driver):
 def scrape_hellowork(driver):
     offers = []
     try:
+        login_hellowork(driver)
         driver.get("https://www.hellowork.com/fr-fr/emploi/metier_audiovisuel-ville_paris-75000.html")
         time.sleep(10)
         driver.execute_script("window.scrollTo(0, document.body.scrollHeight)")
