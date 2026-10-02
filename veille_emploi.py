@@ -69,7 +69,7 @@ def collect_offers():
     driver.quit()
     body = ""
     for name, offers in sections.items():
-        print(f"[{name}] {len(offres)} offres trouvées")
+        print(f"[{name}] {len(offers)} offres trouvées")
         body += f"\n{'='*40}\n{name}\n{'='*40}\n\n"
         body += "\n\n".join(offers) + "\n\n"
     return body
