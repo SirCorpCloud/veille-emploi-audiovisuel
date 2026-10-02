@@ -1,3 +1,4 @@
+import feedparser
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -7,8 +8,11 @@ import time
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
+
+RSS_SOURCES = {
+    "SACEM": "https://sacem.profils.org/handlers/offerRss.ashx?LCID=1036",
+    "GroupeM6": "https://www.recrutement.groupem6.fr/handlers/offerRss.ashx?LCID=1036",
+}
 
 def get_driver():
     opts = Options()
@@ -19,19 +23,39 @@ def get_driver():
     opts.add_argument('user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36')
     return webdriver.Chrome(options=opts)
 
-def scrape_generic(driver, url, wait_time=10):
+def scrape_linkedin(driver):
     offers = []
     try:
-        driver.get(url)
-        time.sleep(wait_time)
+        driver.get("https://www.linkedin.com/jobs/search/?keywords=audiovisuel%20post-production&location=Paris")
+        time.sleep(8)
         driver.execute_script("window.scrollTo(0, document.body.scrollHeight)")
         time.sleep(3)
-        cards = driver.find_elements(By.CSS_SELECTOR, 'a[href*="/offre"], a[href*="/emploi"], a[href*="/job"], article, .card, .item, .result')
-        for card in cards[:20]:
+        cards = driver.find_elements(By.CSS_SELECTOR, '.base-card, .jobs-search-results__list-item')
+        for card in cards[:15]:
             try:
-                title = card.text.strip().split('\n')[0]
-                link = card.get_attribute('href') or ''
-                if title and len(title) > 10 and 'audiovisuel' in title.lower() or 'monteur' in title.lower() or 'production' in title.lower() or 'média' in title.lower():
+                title = card.find_element(By.CSS_SELECTOR, '.base-search-card__title, .job-card-list__title, h3').text.strip()
+                link = card.find_element(By.CSS_SELECTOR, 'a').get_attribute('href') or ''
+                if title:
+                    offers.append(f"{title}\n{link}")
+            except:
+                continue
+    except Exception as e:
+        offers.append(f"Erreur: {e}")
+    return offers
+
+def scrape_hellowork(driver):
+    offers = []
+    try:
+        driver.get("https://www.hellowork.com/fr-fr/emploi/metier_audiovisuel-ville_paris-75000.html")
+        time.sleep(10)
+        driver.execute_script("window.scrollTo(0, document.body.scrollHeight)")
+        time.sleep(5)
+        cards = driver.find_elements(By.CSS_SELECTOR, '.job-card, [data-testid="job-card"], .offer-card')
+        for card in cards[:15]:
+            try:
+                title = card.find_element(By.CSS_SELECTOR, 'h2, h3, .job-title').text.strip()
+                link = card.find_element(By.CSS_SELECTOR, 'a').get_attribute('href') or ''
+                if title:
                     offers.append(f"{title}\n{link}")
             except:
                 continue
@@ -40,13 +64,21 @@ def scrape_generic(driver, url, wait_time=10):
     return offers
 
 def collect_offers():
+    sections = {}
+    for name, url in RSS_SOURCES.items():
+        try:
+            feed = feedparser.parse(url)
+            offers = []
+            for entry in feed.entries[:15]:
+                title = getattr(entry, 'title', 'Sans titre')
+                link = getattr(entry, 'link', '')
+                offers.append(f"{title}\n{link}")
+            sections[name] = offers
+        except Exception as e:
+            sections[name] = [f"Erreur: {e}"]
     driver = get_driver()
-    sections = {
-        "LinkedIn": scrape_generic(driver, "https://www.linkedin.com/jobs/search/?keywords=audiovisuel%20post-production&location=Paris", 8),
-        "SACEM": scrape_generic(driver, "https://sacem.profils.org/offre-de-emploi/tous-les-flux-rss.aspx", 10),
-        "GroupeM6": scrape_generic(driver, "https://www.recrutement.groupem6.fr/offre-de-emploi/tous-les-flux-rss.aspx", 10),
-        "HelloWork": scrape_generic(driver, "https://www.hellowork.com/fr-fr/emploi/metier_audiovisuel-ville_paris-75000.html", 10),
-    }
+    sections["LinkedIn"] = scrape_linkedin(driver)
+    sections["HelloWork"] = scrape_hellowork(driver)
     driver.quit()
     body = ""
     for name, offers in sections.items():
