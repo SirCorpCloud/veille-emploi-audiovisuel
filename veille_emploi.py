@@ -1,4 +1,3 @@
-import feedparser
 import smtplib
 import requests
 from bs4 import BeautifulSoup
@@ -7,83 +6,142 @@ from email.mime.multipart import MIMEMultipart
 from datetime import datetime
 import os
 
-SOURCES = {
-    "HelloWork": "https://www.hellowork.com/fr-fr/rss?jobFunction=7,8,9&location=Paris",
-    "Indeed": "https://fr.indeed.com/rss?q=audiovisuel+OR+post-production+OR+m%C3%A9dias&l=Paris&radius=25",
-    "MediaKron": "https://www.mediakron.fr/feed/",
-    "FranceTravail": "https://www.francetravail.fr/recherche/audiovisuel?lieux=Paris",
-    "LinkedIn": "https://rsshub.app/linkedin/jobs/F/4/audiovisuel%20OR%20post-production%20OR%20m%C3%A9dias/1-2-3/91000003",
-    "EcranTotal": "https://ecran-total.fr/audiovisuel-job/feed/",
-    "Jobintree": "https://www.jobintree.com/emploi/domaine_audiovisuel.html",
-}
+HEADERS = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36'}
 
-SCRAPING_SOURCES = {
-    "Crews": "https://www.crews-education.com/nos-offres",
-    "Artmedia": "https://www.artmedia.co.il/careers",
-    "Audiovisuel-Emploi": "https://ecran-total.fr/audiovisuel-job/",
-}
-
-def scrape_crews():
+def scrape_hellowork():
     offers = []
     try:
-        r = requests.get(SCRAPING_SOURCES["Crews"], timeout=10)
+        url = "https://www.hellowork.com/fr-fr/emploi/metier_audiovisuel-ville_paris-75000.html"
+        r = requests.get(url, headers=HEADERS, timeout=15)
         soup = BeautifulSoup(r.text, 'html.parser')
-        for job in soup.select('.job-card, .offre-emploi, article')[:10]:
+        for job in soup.select('.job-card, .offer-card, [data-testid="job-card"]')[:15]:
+            title = job.select_one('h2, h3, .job-title, .offer-title')
+            link = job.find('a')
+            if title and link:
+                offers.append(f"{title.text.strip()}\n{link.get('href', '')}\n")
+    except Exception as e:
+        offers.append(f"Erreur: {e}")
+    return offers
+
+def scrape_indeed():
+    offers = []
+    try:
+        url = "https://fr.indeed.com/jobs?q=audiovisuel+post-production&l=Paris&radius=25"
+        r = requests.get(url, headers=HEADERS, timeout=15)
+        soup = BeautifulSoup(r.text, 'html.parser')
+        for job in soup.select('.job_seen_beacon, .jobsearch-ResultsList > div, [data-testid="jobTitle"]')[:15]:
+            title = job.select_one('h2, h3, .jobTitle, a')
+            link = job.find('a')
+            if title and link:
+                offers.append(f"{title.text.strip()}\n{link.get('href', '')}\n")
+    except Exception as e:
+        offers.append(f"Erreur: {e}")
+    return offers
+
+def scrape_france_travail():
+    offers = []
+    try:
+        url = "https://www.francetravail.fr/recherche/audiovisuel?lieux=Paris"
+        r = requests.get(url, headers=HEADERS, timeout=15)
+        soup = BeautifulSoup(r.text, 'html.parser')
+        for job in soup.select('.result-item, .offre, article')[:15]:
+            title = job.select_one('h2, h3, .title, a')
+            link = job.find('a')
+            if title and link:
+                offers.append(f"{title.text.strip()}\n{link.get('href', '')}\n")
+    except Exception as e:
+        offers.append(f"Erreur: {e}")
+    return offers
+
+def scrape_linkedin():
+    offers = []
+    try:
+        url = "https://www.linkedin.com/jobs/search/?keywords=audiovisuel%20post-production&location=Paris"
+        r = requests.get(url, headers=HEADERS, timeout=15)
+        soup = BeautifulSoup(r.text, 'html.parser')
+        for job in soup.select('.base-card, .jobs-search-results__list-item, .job-card-container')[:15]:
+            title = job.select_one('.base-search-card__title, .job-card-list__title, h3')
+            link = job.find('a')
+            if title and link:
+                offers.append(f"{title.text.strip()}\n{link.get('href', '')}\n")
+    except Exception as e:
+        offers.append(f"Erreur: {e}")
+    return offers
+
+def scrape_mediakron():
+    offers = []
+    try:
+        url = "https://www.mediakron.fr"
+        r = requests.get(url, headers=HEADERS, timeout=15)
+        soup = BeautifulSoup(r.text, 'html.parser')
+        for job in soup.select('.offre, .job, article')[:15]:
             title = job.select_one('h2, h3, .title')
             link = job.find('a')
             if title and link:
-                offers.append(f"[Crews] {title.text.strip()}\n{link.get('href', '')}\n")
+                offers.append(f"{title.text.strip()}\n{link.get('href', '')}\n")
     except Exception as e:
-        offers.append(f"[Crews] Erreur: {e}\n")
-    return offers
-
-def scrape_artmedia():
-    offers = []
-    try:
-        r = requests.get(SCRAPING_SOURCES["Artmedia"], timeout=10)
-        soup = BeautifulSoup(r.text, 'html.parser')
-        for job in soup.select('.job-listing, .career-item, .offre')[:10]:
-            title = job.select_one('h2, h3, .job-title')
-            link = job.find('a')
-            if title and link:
-                offers.append(f"[Artmedia] {title.text.strip()}\n{link.get('href', '')}\n")
-    except Exception as e:
-        offers.append(f"[Artmedia] Erreur: {e}\n")
+        offers.append(f"Erreur: {e}")
     return offers
 
 def scrape_ecran_total():
     offers = []
     try:
-        r = requests.get(SCRAPING_SOURCES["Audiovisuel-Emploi"], timeout=10)
+        url = "https://ecran-total.fr/audiovisuel-job/"
+        r = requests.get(url, headers=HEADERS, timeout=15)
         soup = BeautifulSoup(r.text, 'html.parser')
-        for job in soup.select('.offre, .job-item, article')[:10]:
+        for job in soup.select('.offre, .job-item, article')[:15]:
             title = job.select_one('h2, h3, .title')
             link = job.find('a')
             if title and link:
-                offers.append(f"[Audiovisuel-Emploi] {title.text.strip()}\n{link.get('href', '')}\n")
+                offers.append(f"{title.text.strip()}\n{link.get('href', '')}\n")
     except Exception as e:
-        offers.append(f"[Audiovisuel-Emploi] Erreur: {e}\n")
+        offers.append(f"Erreur: {e}")
+    return offers
+
+def scrape_crews():
+    offers = []
+    try:
+        url = "https://www.crews-education.com/nos-offres"
+        r = requests.get(url, headers=HEADERS, timeout=15)
+        soup = BeautifulSoup(r.text, 'html.parser')
+        for job in soup.select('.job-card, .offre-emploi, article')[:15]:
+            title = job.select_one('h2, h3, .title')
+            link = job.find('a')
+            if title and link:
+                offers.append(f"{title.text.strip()}\n{link.get('href', '')}\n")
+    except Exception as e:
+        offers.append(f"Erreur: {e}")
+    return offers
+
+def scrape_artmedia():
+    offers = []
+    try:
+        url = "https://www.artmedia.co.il/careers"
+        r = requests.get(url, headers=HEADERS, timeout=15)
+        soup = BeautifulSoup(r.text, 'html.parser')
+        for job in soup.select('.job-listing, .career-item, .offre')[:15]:
+            title = job.select_one('h2, h3, .job-title')
+            link = job.find('a')
+            if title and link:
+                offers.append(f"{title.text.strip()}\n{link.get('href', '')}\n")
+    except Exception as e:
+        offers.append(f"Erreur: {e}")
     return offers
 
 def collect_offers():
-    sections = {}
-    for name, url in SOURCES.items():
-        try:
-            feed = feedparser.parse(url)
-            print(f"[{name}] {len(feed.entries)} offres trouvées")
-            for entry in feed.entries[:15]:
-                title = getattr(entry, 'title', 'Sans titre')
-                link = getattr(entry, 'link', '')
-                published = getattr(entry, 'published', '')
-                sections.setdefault(name, []).append(f"{title}\n{link}\n{published}")
-        except Exception as e:
-            print(f"[{name}] Erreur: {e}")
-            sections.setdefault(name, []).append(f"Erreur: {e}")
-    for name, offers in [("Crews", scrape_crews()), ("Artmedia", scrape_artmedia()), ("Audiovisuel-Emploi", scrape_ecran_total())]:
-        print(f"[{name}] {len(offers)} offres scrapées")
-        sections.setdefault(name, []).extend(offers)
+    sections = {
+        "HelloWork": scrape_hellowork(),
+        "Indeed": scrape_indeed(),
+        "FranceTravail": scrape_france_travail(),
+        "LinkedIn": scrape_linkedin(),
+        "MediaKron": scrape_mediakron(),
+        "EcranTotal": scrape_ecran_total(),
+        "Crews": scrape_crews(),
+        "Artmedia": scrape_artmedia(),
+    }
     body = ""
     for name, offers in sections.items():
+        print(f"[{name}] {len(offers)} offres trouvées")
         body += f"\n{'='*40}\n{name}\n{'='*40}\n\n"
         body += "\n\n".join(offers) + "\n\n"
     return body
@@ -94,9 +152,7 @@ def send_daily_digest():
     msg['Subject'] = f"Offres Audiovisuel/Post-prod/Médias - {datetime.now().strftime('%d/%m/%Y')}"
     msg['From'] = os.environ.get('EMAIL_FROM')
     msg['To'] = os.environ.get('EMAIL_TO')
-
     msg.attach(MIMEText(body, 'plain'))
-
     with smtplib.SMTP("smtp.mail.icloud.com", 587) as server:
         server.starttls()
         server.login(os.environ.get('EMAIL_FROM'), os.environ.get('EMAIL_PASSWORD'))
