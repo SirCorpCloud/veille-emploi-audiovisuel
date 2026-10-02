@@ -14,8 +14,8 @@ RSS_SOURCES = {
     "GroupeM6": "https://www.recrutement.groupem6.fr/handlers/offerRss.ashx?LCID=1036",
 }
 
-ADZUNA_APP_ID = "8c245ee4"
-ADZUNA_APP_KEY = "43b67b804d606209a49fc8d422ae4c84"
+ADZUNA_APP_ID = os.environ.get('ADZUNA_APP_ID')
+ADZUNA_APP_KEY = os.environ.get('ADZUNA_APP_KEY')
 
 FRANCE_TRAVAIL_CLIENT_ID = os.environ.get('FT_CLIENT_ID')
 FRANCE_TRAVAIL_CLIENT_SECRET = os.environ.get('FT_CLIENT_SECRET')

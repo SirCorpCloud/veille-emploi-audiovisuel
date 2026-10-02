@@ -33,3 +33,5 @@ jobs:
           LINKEDIN_PASSWORD: ${{ secrets.LINKEDIN_PASSWORD }}
           HELLOWORK_EMAIL: ${{ secrets.HELLOWORK_EMAIL }}
           HELLOWORK_PASSWORD: ${{ secrets.HELLOWORK_PASSWORD }}
+          ADZUNA_APP_ID: ${{ secrets.ADZUNA_APP_ID }}
+          ADZUNA_APP_KEY: ${{ secrets.ADZUNA_APP_KEY }}
