@@ -28,6 +28,7 @@ def get_france_travail_token():
         headers={"Content-Type": "application/x-www-form-urlencoded"},
         timeout=15
     )
+    print(f"France Travail token response: {r.status_code} {r.text[:200]}")
     return r.json().get('access_token', '')
 
 def get_france_travail_offers():
@@ -56,6 +57,7 @@ def get_adzuna_offers():
         import requests
         url = f"https://api.adzuna.com/v1/api/jobs/fr/search/1?app_id={ADZUNA_APP_ID}&app_key={ADZUNA_APP_KEY}&what=audiovisuel%20post-production&where=Paris&radius=25&max_days_old=7&results_per_page=15"
         r = requests.get(url, timeout=15)
+        print(f"Adzuna response: {r.status_code} {r.text[:200]}")
         data = r.json()
         for result in data.get('results', []):
             title = result.get('title', '')
@@ -88,12 +90,16 @@ def login_linkedin(driver):
 def login_hellowork(driver):
     try:
         driver.get("https://www.hellowork.com/fr-fr/candidat/connexion-inscription.html#connexion")
-        time.sleep(10)
+        time.sleep(15)
         driver.execute_script("window.scrollTo(0, document.body.scrollHeight)")
-        time.sleep(3)
+        time.sleep(5)
         email_field = driver.find_element(By.CSS_SELECTOR, "input[type='email'], input[name='email'], input[autocomplete='email'], input[data-cy='email']")
+        email_field.click()
+        time.sleep(1)
         email_field.send_keys(os.environ.get('HELLOWORK_EMAIL'))
         password_field = driver.find_element(By.CSS_SELECTOR, "input[type='password'], input[name='password'], input[autocomplete='current-password'], input[data-cy='password']")
+        password_field.click()
+        time.sleep(1)
         password_field.send_keys(os.environ.get('HELLOWORK_PASSWORD'))
         driver.find_element(By.CSS_SELECTOR, "button[type='submit'], button[data-cy='login-submit'], button.login-btn").click()
         time.sleep(5)
