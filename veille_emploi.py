@@ -1,147 +1,75 @@
 import smtplib
-import requests
-from bs4 import BeautifulSoup
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from datetime import datetime
 import os
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 
-HEADERS = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36'}
+def get_driver():
+    opts = Options()
+    opts.add_argument('--headless')
+    opts.add_argument('--no-sandbox')
+    opts.add_argument('--disable-dev-shm-usage')
+    opts.add_argument('--window-size=1920,1080')
+    opts.add_argument('user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36')
+    return webdriver.Chrome(options=opts)
 
-def scrape_hellowork():
+def scrape_site(driver, url, selectors, wait_selector=None, timeout=15):
     offers = []
     try:
-        url = "https://www.hellowork.com/fr-fr/emploi/metier_audiovisuel-ville_paris-75000.html"
-        r = requests.get(url, headers=HEADERS, timeout=15)
-        soup = BeautifulSoup(r.text, 'html.parser')
-        for job in soup.select('.job-card, .offer-card, [data-testid="job-card"]')[:15]:
-            title = job.select_one('h2, h3, .job-title, .offer-title')
-            link = job.find('a')
-            if title and link:
-                offers.append(f"{title.text.strip()}\n{link.get('href', '')}\n")
-    except Exception as e:
-        offers.append(f"Erreur: {e}")
-    return offers
-
-def scrape_indeed():
-    offers = []
-    try:
-        url = "https://fr.indeed.com/jobs?q=audiovisuel+post-production&l=Paris&radius=25"
-        r = requests.get(url, headers=HEADERS, timeout=15)
-        soup = BeautifulSoup(r.text, 'html.parser')
-        for job in soup.select('.job_seen_beacon, .jobsearch-ResultsList > div, [data-testid="jobTitle"]')[:15]:
-            title = job.select_one('h2, h3, .jobTitle, a')
-            link = job.find('a')
-            if title and link:
-                offers.append(f"{title.text.strip()}\n{link.get('href', '')}\n")
-    except Exception as e:
-        offers.append(f"Erreur: {e}")
-    return offers
-
-def scrape_france_travail():
-    offers = []
-    try:
-        url = "https://www.francetravail.fr/recherche/audiovisuel?lieux=Paris"
-        r = requests.get(url, headers=HEADERS, timeout=15)
-        soup = BeautifulSoup(r.text, 'html.parser')
-        for job in soup.select('.result-item, .offre, article')[:15]:
-            title = job.select_one('h2, h3, .title, a')
-            link = job.find('a')
-            if title and link:
-                offers.append(f"{title.text.strip()}\n{link.get('href', '')}\n")
-    except Exception as e:
-        offers.append(f"Erreur: {e}")
-    return offers
-
-def scrape_linkedin():
-    offers = []
-    try:
-        url = "https://www.linkedin.com/jobs/search/?keywords=audiovisuel%20post-production&location=Paris"
-        r = requests.get(url, headers=HEADERS, timeout=15)
-        soup = BeautifulSoup(r.text, 'html.parser')
-        for job in soup.select('.base-card, .jobs-search-results__list-item, .job-card-container')[:15]:
-            title = job.select_one('.base-search-card__title, .job-card-list__title, h3')
-            link = job.find('a')
-            if title and link:
-                offers.append(f"{title.text.strip()}\n{link.get('href', '')}\n")
-    except Exception as e:
-        offers.append(f"Erreur: {e}")
-    return offers
-
-def scrape_mediakron():
-    offers = []
-    try:
-        url = "https://www.mediakron.fr"
-        r = requests.get(url, headers=HEADERS, timeout=15)
-        soup = BeautifulSoup(r.text, 'html.parser')
-        for job in soup.select('.offre, .job, article')[:15]:
-            title = job.select_one('h2, h3, .title')
-            link = job.find('a')
-            if title and link:
-                offers.append(f"{title.text.strip()}\n{link.get('href', '')}\n")
-    except Exception as e:
-        offers.append(f"Erreur: {e}")
-    return offers
-
-def scrape_ecran_total():
-    offers = []
-    try:
-        url = "https://ecran-total.fr/audiovisuel-job/"
-        r = requests.get(url, headers=HEADERS, timeout=15)
-        soup = BeautifulSoup(r.text, 'html.parser')
-        for job in soup.select('.offre, .job-item, article')[:15]:
-            title = job.select_one('h2, h3, .title')
-            link = job.find('a')
-            if title and link:
-                offers.append(f"{title.text.strip()}\n{link.get('href', '')}\n")
-    except Exception as e:
-        offers.append(f"Erreur: {e}")
-    return offers
-
-def scrape_crews():
-    offers = []
-    try:
-        url = "https://www.crews-education.com/nos-offres"
-        r = requests.get(url, headers=HEADERS, timeout=15)
-        soup = BeautifulSoup(r.text, 'html.parser')
-        for job in soup.select('.job-card, .offre-emploi, article')[:15]:
-            title = job.select_one('h2, h3, .title')
-            link = job.find('a')
-            if title and link:
-                offers.append(f"{title.text.strip()}\n{link.get('href', '')}\n")
-    except Exception as e:
-        offers.append(f"Erreur: {e}")
-    return offers
-
-def scrape_artmedia():
-    offers = []
-    try:
-        url = "https://www.artmedia.co.il/careers"
-        r = requests.get(url, headers=HEADERS, timeout=15)
-        soup = BeautifulSoup(r.text, 'html.parser')
-        for job in soup.select('.job-listing, .career-item, .offre')[:15]:
-            title = job.select_one('h2, h3, .job-title')
-            link = job.find('a')
-            if title and link:
-                offers.append(f"{title.text.strip()}\n{link.get('href', '')}\n")
+        driver.get(url)
+        if wait_selector:
+            WebDriverWait(driver, timeout).until(EC.presence_of_element_located((By.CSS_SELECTOR, wait_selector)))
+        else:
+            driver.implicitly_wait(5)
+        cards = driver.find_elements(By.CSS_SELECTOR, selectors[0])
+        for card in cards[:15]:
+            try:
+                title_el = card.find_element(By.CSS_SELECTOR, selectors[1])
+                link_el = card.find_element(By.CSS_SELECTOR, 'a')
+                title = title_el.text.strip()
+                link = link_el.get_attribute('href') or ''
+                if title:
+                    offers.append(f"{title}\n{link}")
+            except:
+                continue
     except Exception as e:
         offers.append(f"Erreur: {e}")
     return offers
 
 def collect_offers():
+    driver = get_driver()
     sections = {
-        "HelloWork": scrape_hellowork(),
-        "Indeed": scrape_indeed(),
-        "FranceTravail": scrape_france_travail(),
-        "LinkedIn": scrape_linkedin(),
-        "MediaKron": scrape_mediakron(),
-        "EcranTotal": scrape_ecran_total(),
-        "Crews": scrape_crews(),
-        "Artmedia": scrape_artmedia(),
+        "HelloWork": scrape_site(driver,
+            "https://www.hellowork.com/fr-fr/emploi/metier_audiovisuel-ville_paris-75000.html",
+            ['.job-card', 'h2, h3'], '.job-card'),
+        "Indeed": scrape_site(driver,
+            "https://fr.indeed.com/jobs?q=audiovisuel+post-production&l=Paris&radius=25",
+            ['.job_seen_beacon', 'h2, h3'], '.job_seen_beacon'),
+        "FranceTravail": scrape_site(driver,
+            "https://www.francetravail.fr/recherche/audiovisuel?lieux=Paris",
+            ['.result-item', 'h2, h3'], '.result-item'),
+        "LinkedIn": scrape_site(driver,
+            "https://www.linkedin.com/jobs/search/?keywords=audiovisuel%20post-production&location=Paris",
+            ['.base-card', '.base-search-card__title'], '.base-card'),
+        "EcranTotal": scrape_site(driver,
+            "https://ecran-total.fr/audiovisuel-job/",
+            ['article', 'h2, h3'], 'article'),
+        "Crews": scrape_site(driver,
+            "https://www.crews-education.com/nos-offres",
+            ['article', 'h2, h3'], 'article'),
+        "Artmedia": scrape_site(driver,
+            "https://www.artmedia.co.il/careers",
+            ['article', 'h2, h3'], 'article'),
     }
+    driver.quit()
     body = ""
     for name, offers in sections.items():
-        print(f"[{name}] {len(offers)} offres trouvées")
+        print(f"[{name}] {len(offres)} offres trouvées")
         body += f"\n{'='*40}\n{name}\n{'='*40}\n\n"
         body += "\n\n".join(offers) + "\n\n"
     return body

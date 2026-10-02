@@ -15,6 +15,11 @@ jobs:
         with:
           python-version: '3.11'
 
+      - name: Install Chrome
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y chromium-browser
+
       - run: pip install -r requirements.txt
 
       - run: python veille_emploi.py
