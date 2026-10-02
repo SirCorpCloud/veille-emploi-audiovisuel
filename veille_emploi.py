@@ -14,6 +14,57 @@ RSS_SOURCES = {
     "GroupeM6": "https://www.recrutement.groupem6.fr/handlers/offerRss.ashx?LCID=1036",
 }
 
+ADZUNA_APP_ID = "8c245ee4"
+ADZUNA_APP_KEY = "d48cac00ae8f29fbe02bc45242a010cf"
+
+FRANCE_TRAVAIL_CLIENT_ID = os.environ.get('FT_CLIENT_ID')
+FRANCE_TRAVAIL_CLIENT_SECRET = os.environ.get('FT_CLIENT_SECRET')
+
+def get_france_travail_token():
+    import requests
+    r = requests.post(
+        "https://entreprise.francetravail.fr/connexion/oauth2/access_token?realm=%2Fpartenaire",
+        data={"grant_type": "client_credentials", "client_id": FRANCE_TRAVAIL_CLIENT_ID, "client_secret": FRANCE_TRAVAIL_CLIENT_SECRET, "scope": "api_offresdemploiv2 o2dsoffre"},
+        headers={"Content-Type": "application/x-www-form-urlencoded"},
+        timeout=15
+    )
+    return r.json().get('access_token', '')
+
+def get_france_travail_offers():
+    offers = []
+    try:
+        import requests
+        token = get_france_travail_token()
+        if not token:
+            offers.append("Erreur: token France Travail non obtenu")
+            return offers
+        url = "https://api.francetravail.io/partenaire/offresdemploi/v2/offres/search"
+        params = {"motsCles": "audiovisuel", "lieux": "Paris", "range": "0-14"}
+        r = requests.get(url, params=params, headers={"Authorization": f"Bearer {token}"}, timeout=15)
+        data = r.json()
+        for offre in data.get('resultats', []):
+            title = offre.get('intitule', '')
+            link = f"https://www.francetravail.fr/recherche/detail-offre/{offre.get('id', '')}"
+            offers.append(f"{title}\n{link}")
+    except Exception as e:
+        offers.append(f"Erreur: {e}")
+    return offers
+
+def get_adzuna_offers():
+    offers = []
+    try:
+        import requests
+        url = f"https://api.adzuna.com/v1/api/jobs/fr/search/1?app_id={ADZUNA_APP_ID}&app_key={ADZUNA_APP_KEY}&what=audiovisuel%20post-production&where=Paris&radius=25&max_days_old=7&results_per_page=15"
+        r = requests.get(url, timeout=15)
+        data = r.json()
+        for result in data.get('results', []):
+            title = result.get('title', '')
+            link = result.get('redirect_url', '')
+            offers.append(f"{title}\n{link}")
+    except Exception as e:
+        offers.append(f"Erreur: {e}")
+    return offers
+
 def get_driver():
     opts = Options()
     opts.add_argument('--headless')
@@ -76,6 +127,8 @@ def collect_offers():
             sections[name] = offers
         except Exception as e:
             sections[name] = [f"Erreur: {e}"]
+    sections["Indeed"] = get_adzuna_offers()
+    sections["FranceTravail"] = get_france_travail_offers()
     driver = get_driver()
     sections["LinkedIn"] = scrape_linkedin(driver)
     sections["HelloWork"] = scrape_hellowork(driver)
