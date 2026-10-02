@@ -55,7 +55,7 @@ def get_adzuna_offers():
     offers = []
     try:
         import requests
-        url = f"https://api.adzuna.com/v1/api/jobs/fr/search/1?app_id={ADZUNA_APP_ID}&app_key={ADZUNA_APP_KEY}&what=audiovisuel%20post-production&where=Paris&radius=25&max_days_old=7&results_per_page=15"
+        url = f"https://api.adzuna.com/v1/api/jobs/fr/search/1?app_id={ADZUNA_APP_ID}&app_key={ADZUNA_APP_KEY}&what=audiovisuel&where=Paris&radius=25&max_days_old=7&results_per_page=15"
         r = requests.get(url, timeout=15)
         print(f"Adzuna response: {r.status_code} {r.text[:200]}")
         data = r.json()
