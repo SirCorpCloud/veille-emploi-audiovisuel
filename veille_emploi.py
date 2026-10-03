@@ -79,9 +79,18 @@ def get_driver():
 def login_linkedin(driver):
     try:
         driver.get("https://www.linkedin.com/login")
-        time.sleep(5)
-        driver.find_element(By.CSS_SELECTOR, "input[type='email'], input[autocomplete='username']").send_keys(os.environ.get('LINKEDIN_EMAIL'))
-        driver.find_element(By.CSS_SELECTOR, "input[type='password'], input[autocomplete='current-password']").send_keys(os.environ.get('LINKEDIN_PASSWORD'))
+        time.sleep(8)
+        from selenium.webdriver.support.ui import WebDriverWait
+        from selenium.webdriver.support import expected_conditions as EC
+        from selenium.webdriver.common.by import By
+        email_field = WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.CSS_SELECTOR, "input[type='email'], input[autocomplete='username']")))
+        email_field.click()
+        time.sleep(1)
+        email_field.send_keys(os.environ.get('LINKEDIN_EMAIL'))
+        password_field = driver.find_element(By.CSS_SELECTOR, "input[type='password'], input[autocomplete='current-password']")
+        password_field.click()
+        time.sleep(1)
+        password_field.send_keys(os.environ.get('LINKEDIN_PASSWORD'))
         driver.find_element(By.CSS_SELECTOR, "button[type='submit'], button.sign-in-form__submit-btn").click()
         time.sleep(5)
     except Exception as e:
