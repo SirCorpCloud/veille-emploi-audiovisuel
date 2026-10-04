@@ -188,7 +188,6 @@ def collect_offers():
     sections["FranceTravail"] = get_france_travail_offers()
     driver = get_driver()
     sections["LinkedIn"] = scrape_linkedin(driver)
-    sections["WTTJ"] = scrape_wttj(driver)
     driver.quit()
     body = ""
     for name, offers in sections.items():
