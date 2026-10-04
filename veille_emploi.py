@@ -45,7 +45,7 @@ def get_france_travail_offers():
         data = r.json()
         for offre in data.get('resultats', []):
             title = offre.get('intitule', '')
-            link = f"https://www.francetravail.fr/recherche/detail-offre/{offre.get('id', '')}"
+            link = f"https://www.francetravail.fr/recherche/detail-offre/{offre.get('id', '')}?utm_source=api"
             offers.append(f"{title}\n{link}")
     except Exception as e:
         offers.append(f"Erreur: {e}")
