@@ -113,11 +113,11 @@ def login_hellowork(driver):
         time.sleep(5)
         from selenium.webdriver.support.ui import WebDriverWait
         from selenium.webdriver.support import expected_conditions as EC
-        email_field = WebDriverWait(driver, 15).until(EC.element_to_be_clickable((By.CSS_SELECTOR, "input[type='email'], input[name='email'], input[autocomplete='email']")))
+        email_field = WebDriverWait(driver, 15).until(EC.element_to_be_clickable((By.CSS_SELECTOR, "input[name='email2'], input[type='email']")))
         email_field.click()
         time.sleep(1)
         email_field.send_keys(os.environ.get('HELLOWORK_EMAIL'))
-        password_field = driver.find_element(By.CSS_SELECTOR, "input[type='password'], input[name='password'], input[autocomplete='current-password']")
+        password_field = driver.find_element(By.CSS_SELECTOR, "input[name='password2'], input[type='password']")
         password_field.click()
         time.sleep(1)
         password_field.send_keys(os.environ.get('HELLOWORK_PASSWORD'))
