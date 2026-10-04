@@ -87,14 +87,14 @@ def login_linkedin(driver):
         from selenium.webdriver.support import expected_conditions as EC
         from selenium.webdriver.common.by import By
         inputs = driver.find_elements(By.CSS_SELECTOR, "input[type='email'], input[autocomplete='username']")
-        email_field = next((i for i in inputs if i.is_displayable()), None)
+        email_field = next((i for i in inputs if i.is_displayed()), None)
         if not email_field:
             raise Exception("LinkedIn email field not visible")
         email_field.click()
         time.sleep(1)
         email_field.send_keys(os.environ.get('LINKEDIN_EMAIL'))
         inputs = driver.find_elements(By.CSS_SELECTOR, "input[type='password'], input[autocomplete='current-password']")
-        password_field = next((i for i in inputs if i.is_displayable()), None)
+        password_field = next((i for i in inputs if i.is_displayed()), None)
         if not password_field:
             raise Exception("LinkedIn password field not visible")
         password_field.click()
