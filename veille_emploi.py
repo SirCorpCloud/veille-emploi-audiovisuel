@@ -105,26 +105,25 @@ def login_linkedin(driver):
     except Exception as e:
         print(f"LinkedIn login error: {e}")
 
-def login_hellowork(driver):
+def scrape_wttj(driver):
+    offers = []
     try:
-        driver.get("https://www.hellowork.com/fr-fr/candidat/connexion-inscription.html#connexion")
-        time.sleep(15)
+        driver.get("https://www.welcometothejungle.com/fr/jobs?query=audiovisuel%20post-production&refinementList%5Boffices.country_code%5D%5B%5D=FR")
+        time.sleep(10)
         driver.execute_script("window.scrollTo(0, document.body.scrollHeight)")
-        time.sleep(5)
-        from selenium.webdriver.support.ui import WebDriverWait
-        from selenium.webdriver.support import expected_conditions as EC
-        email_field = WebDriverWait(driver, 15).until(EC.element_to_be_clickable((By.CSS_SELECTOR, "input[name='email2'], input[type='email']")))
-        email_field.click()
-        time.sleep(1)
-        email_field.send_keys(os.environ.get('HELLOWORK_EMAIL'))
-        password_field = driver.find_element(By.CSS_SELECTOR, "input[name='password2'], input[type='password']")
-        password_field.click()
-        time.sleep(1)
-        password_field.send_keys(os.environ.get('HELLOWORK_PASSWORD'))
-        driver.find_element(By.CSS_SELECTOR, "button[type='submit'], button[data-cy='login-submit'], button.login-btn").click()
-        time.sleep(5)
+        time.sleep(3)
+        cards = driver.find_elements(By.CSS_SELECTOR, 'article, .job-card, [data-testid="job-card"]')
+        for card in cards[:15]:
+            try:
+                title = card.find_element(By.CSS_SELECTOR, 'h2, h3, .job-title, [data-testid="job-title"]').text.strip()
+                link = card.find_element(By.CSS_SELECTOR, 'a').get_attribute('href') or ''
+                if title:
+                    offers.append(f"{title}\n{link}")
+            except:
+                continue
     except Exception as e:
-        print(f"HelloWork login error: {e}")
+        offers.append(f"Erreur: {e}")
+    return offers
 
 def scrape_linkedin(driver):
     offers = []
@@ -185,7 +184,7 @@ def collect_offers():
     sections["FranceTravail"] = get_france_travail_offers()
     driver = get_driver()
     sections["LinkedIn"] = scrape_linkedin(driver)
-    sections["HelloWork"] = scrape_hellowork(driver)
+    sections["WTTJ"] = scrape_wttj(driver)
     driver.quit()
     body = ""
     for name, offers in sections.items():
