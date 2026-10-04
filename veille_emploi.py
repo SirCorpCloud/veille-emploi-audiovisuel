@@ -86,11 +86,17 @@ def login_linkedin(driver):
         from selenium.webdriver.support.ui import WebDriverWait
         from selenium.webdriver.support import expected_conditions as EC
         from selenium.webdriver.common.by import By
-        email_field = WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.CSS_SELECTOR, "input[type='email'], input[autocomplete='username']")))
+        inputs = driver.find_elements(By.CSS_SELECTOR, "input[type='email'], input[autocomplete='username']")
+        email_field = next((i for i in inputs if i.is_displayable()), None)
+        if not email_field:
+            raise Exception("LinkedIn email field not visible")
         email_field.click()
         time.sleep(1)
         email_field.send_keys(os.environ.get('LINKEDIN_EMAIL'))
-        password_field = driver.find_element(By.CSS_SELECTOR, "input[type='password'], input[autocomplete='current-password']")
+        inputs = driver.find_elements(By.CSS_SELECTOR, "input[type='password'], input[autocomplete='current-password']")
+        password_field = next((i for i in inputs if i.is_displayable()), None)
+        if not password_field:
+            raise Exception("LinkedIn password field not visible")
         password_field.click()
         time.sleep(1)
         password_field.send_keys(os.environ.get('LINKEDIN_PASSWORD'))
@@ -105,11 +111,13 @@ def login_hellowork(driver):
         time.sleep(15)
         driver.execute_script("window.scrollTo(0, document.body.scrollHeight)")
         time.sleep(5)
-        email_field = driver.find_element(By.CSS_SELECTOR, "input[type='email'], input[name='email'], input[autocomplete='email'], input[data-cy='email']")
+        from selenium.webdriver.support.ui import WebDriverWait
+        from selenium.webdriver.support import expected_conditions as EC
+        email_field = WebDriverWait(driver, 15).until(EC.element_to_be_clickable((By.CSS_SELECTOR, "input[type='email'], input[name='email'], input[autocomplete='email']")))
         email_field.click()
         time.sleep(1)
         email_field.send_keys(os.environ.get('HELLOWORK_EMAIL'))
-        password_field = driver.find_element(By.CSS_SELECTOR, "input[type='password'], input[name='password'], input[autocomplete='current-password'], input[data-cy='password']")
+        password_field = driver.find_element(By.CSS_SELECTOR, "input[type='password'], input[name='password'], input[autocomplete='current-password']")
         password_field.click()
         time.sleep(1)
         password_field.send_keys(os.environ.get('HELLOWORK_PASSWORD'))
