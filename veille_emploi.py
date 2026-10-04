@@ -109,16 +109,20 @@ def scrape_wttj(driver):
     offers = []
     try:
         driver.get("https://www.welcometothejungle.com/fr/jobs?query=audiovisuel%20post-production&refinementList%5Boffices.country_code%5D%5B%5D=FR")
-        time.sleep(10)
+        time.sleep(15)
         driver.execute_script("window.scrollTo(0, document.body.scrollHeight)")
-        time.sleep(3)
-        cards = driver.find_elements(By.CSS_SELECTOR, 'article, .job-card, [data-testid="job-card"]')
-        for card in cards[:15]:
+        time.sleep(5)
+        from selenium.webdriver.support.ui import WebDriverWait
+        from selenium.webdriver.support import expected_conditions as EC
+        WebDriverWait(driver, 15).until(EC.presence_of_element_located((By.CSS_SELECTOR, 'a')))
+        links = driver.find_elements(By.CSS_SELECTOR, 'a[href*="/fr/companies/"]')
+        for link in links[:15]:
             try:
-                title = card.find_element(By.CSS_SELECTOR, 'h2, h3, .job-title, [data-testid="job-title"]').text.strip()
-                link = card.find_element(By.CSS_SELECTOR, 'a').get_attribute('href') or ''
-                if title:
-                    offers.append(f"{title}\n{link}")
+                href = link.get_attribute('href') or ''
+                if '/jobs/' in href:
+                    title = link.text.strip()
+                    if title:
+                        offers.append(f"{title}\n{href}")
             except:
                 continue
     except Exception as e:
