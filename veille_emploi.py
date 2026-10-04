@@ -100,7 +100,7 @@ def login_linkedin(driver):
         password_field.click()
         time.sleep(1)
         password_field.send_keys(os.environ.get('LINKEDIN_PASSWORD'))
-        driver.find_element(By.CSS_SELECTOR, "button[type='submit'], button.sign-in-form__submit-btn").click()
+        driver.find_element(By.CSS_SELECTOR, "button[type='submit'], button.sign-in-form__submit-btn, button.login__form_action_action").click()
         time.sleep(5)
     except Exception as e:
         print(f"LinkedIn login error: {e}")
